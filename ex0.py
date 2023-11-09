@@ -2,14 +2,14 @@ import z3
 
 
 def ex0():
-    x = z3.Int('x')
+    x = z3.Int("x")
     print(solve(x / 7 == 6))
 
-    y = z3.BitVec('y', 8)
+    y = z3.BitVec("y", 8)
     print(solve(y << 3 == 336))
 
-    z = z3.Int('z')
-    n = z3.Int('n')
+    z = z3.Int("z")
+    n = z3.Int("n")
     print(solve(z3.ForAll([z], z * n == z)))
 
 
@@ -20,5 +20,5 @@ def solve(phi):
     return s.model()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ex0()

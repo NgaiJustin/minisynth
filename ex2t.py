@@ -29,6 +29,7 @@ GRAMMAR = """
 %ignore WS
 """.strip()
 
+
 class Transformer:
     "A tree transformer inspired by Lark's transformers"
 
@@ -36,7 +37,9 @@ class Transformer:
 
     def transform(self, tree):
         self.depth += 1
-        children = [self.transform(c) if isinstance(c, lark.Tree) else c for c in tree.children]
+        children = [
+            self.transform(c) if isinstance(c, lark.Tree) else c for c in tree.children
+        ]
         self.depth -= 1
         try:
             f = getattr(self, tree.data)
@@ -54,7 +57,12 @@ class Interp(Transformer):
         self.lookup = lookup
 
     from operator import (
-        add, sub, mul, neg, lshift, rshift,
+        add,
+        sub,
+        mul,
+        neg,
+        lshift,
+        rshift,
         truediv as div,
     )
 
@@ -65,6 +73,7 @@ class Interp(Transformer):
 
     def cond(self, cond, true, false):
         return (cond != 0) * true + (cond == 0) * false
+
 
 def interp(tree, lookup):
     return Interp(lookup).transform(tree)
@@ -77,10 +86,10 @@ class Pretty(Transformer):
         self.subst = subst
 
     def par(self, s):
-        return '('+s+')' if self.depth else s
+        return "(" + s + ")" if self.depth else s
 
     def neg(self, x):
-        return '-' + x
+        return "-" + x
 
     def num(self, n):
         return n
@@ -89,19 +98,20 @@ class Pretty(Transformer):
         return str(self.subst.get(name, name))
 
     def cond(self, cond, true, false):
-        return self.par('{} ? {} : {}'.format(cond, true, false))
+        return self.par("{} ? {} : {}".format(cond, true, false))
 
     def __default__(self, op, lhs, rhs):
-        assert op in ('add', 'sub', 'mul', 'div', 'lshift', 'rshift')
+        assert op in ("add", "sub", "mul", "div", "lshift", "rshift")
         c = {
-            'add': '+',
-            'sub': '-',
-            'mul': '*',
-            'div': '/',
-            'lshift': '<<',
-            'rshift': '>>',
+            "add": "+",
+            "sub": "-",
+            "mul": "*",
+            "div": "/",
+            "lshift": "<<",
+            "rshift": ">>",
         }[op]
-        return self.par('{} {} {}'.format(lhs, c, rhs))
+        return self.par("{} {} {}".format(lhs, c, rhs))
+
 
 def pretty(tree, subst={}):
     return Pretty(subst).transform(tree)
@@ -140,8 +150,7 @@ def z3_expr(tree, vars=None):
 
 
 def solve(phi):
-    """Solve a Z3 expression, returning the model.
-    """
+    """Solve a Z3 expression, returning the model."""
 
     s = z3.Solver()
     s.add(phi)
@@ -150,12 +159,8 @@ def solve(phi):
 
 
 def model_values(model):
-    """Get the values out of a Z3 model.
-    """
-    return {
-        d.name(): model[d]
-        for d in model.decls()
-    }
+    """Get the values out of a Z3 model."""
+    return {d.name(): model[d] for d in model.decls()}
 
 
 def synthesize(tree1, tree2):
@@ -171,8 +176,7 @@ def synthesize(tree1, tree2):
 
     # Filter out the variables starting with "h" to get the non-hole
     # variables.
-    plain_vars = {k: v for k, v in vars1.items()
-                  if not k.startswith('h')}
+    plain_vars = {k: v for k, v in vars1.items() if not k.startswith("h")}
 
     # Formulate the constraint for Z3.
     goal = z3.ForAll(
@@ -185,7 +189,7 @@ def synthesize(tree1, tree2):
 
 
 def ex2(source):
-    src1, src2 = source.strip().split('\n')
+    src1, src2 = source.strip().split("\n")
 
     parser = lark.Lark(GRAMMAR)
     tree1 = parser.parse(src1)
@@ -196,5 +200,5 @@ def ex2(source):
     print(pretty(tree2, model_values(model)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ex2(sys.stdin.read())
